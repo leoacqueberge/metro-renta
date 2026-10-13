@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Métro renta" />
+    <meta name="theme-color" content="#07101c" />
+    <meta
+      name="description"
+      content="Comptez vos trajets de métro et le coût total — 2,05 € par trajet."
+    />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="./icon-180.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Métro renta</title>
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="glow glow-a"></div>
+      <div class="glow glow-b"></div>
+      <div class="rails"></div>
+      <div class="tile-grid"></div>
+    </div>
+
+    <main class="app">
+      <header class="brand">
+        <p class="brand-mark" aria-hidden="true">M</p>
+        <h1 class="brand-name">Métro renta</h1>
+        <p class="brand-tagline">Chaque trajet, compté.</p>
+      </header>
+
+      <section class="meter" aria-live="polite">
+        <div class="meter-block">
+          <p class="meter-label">Trajets</p>
+          <p class="meter-value" id="ride-count">0</p>
+        </div>
+        <div class="meter-divider" aria-hidden="true"></div>
+        <div class="meter-block">
+          <p class="meter-label">Total</p>
+          <p class="meter-value meter-value--money" id="ride-total">0,00&nbsp;€</p>
+        </div>
+      </section>
+
+      <section class="actions">
+        <button type="button" class="btn-add" id="btn-add" aria-label="Ajouter un trajet">
+          <span class="btn-add-plus" aria-hidden="true">+</span>
+          <span class="btn-add-label">Ajouter un trajet</span>
+          <span class="btn-add-price">2,05&nbsp;€</span>
+        </button>
+
+        <div class="secondary-row">
+          <button type="button" class="btn-ghost" id="btn-undo" disabled>
+            Annuler le dernier
+          </button>
+          <button type="button" class="btn-ghost btn-ghost--danger" id="btn-reset" disabled>
+            Réinitialiser
+          </button>
+        </div>
+      </section>
+
+      <p class="hint" id="hint">Appuyez pour enregistrer un trajet.</p>
+    </main>
+
+    <div
+      class="dialog-backdrop"
+      id="reset-dialog"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="reset-title"
+    >
+      <div class="dialog">
+        <h2 id="reset-title">Tout effacer&nbsp;?</h2>
+        <p>Le compteur et le total seront remis à zéro.</p>
+        <div class="dialog-actions">
+          <button type="button" class="btn-ghost" id="btn-reset-cancel">Annuler</button>
+          <button type="button" class="btn-confirm" id="btn-reset-confirm">Effacer</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
