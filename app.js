@@ -1,6 +1,5 @@
 (() => {
   const STORAGE_KEY = "metro-renta:v2";
-  const DEVICE_KEY = "metro-renta:device-id";
   const DEFAULTS = {
     rides: 0,
     price: 2.05,
@@ -40,23 +39,13 @@
 
   let state = { ...DEFAULTS };
   let supabaseClient = null;
+  let ownerKey = "default";
   let syncTimer = null;
   let toastTimer = null;
+  let cloudReady = false;
 
   function formatEuro(amount) {
     return euro.format(amount).replace(/\u202f/g, "\u00a0");
-  }
-
-  function deviceId() {
-    let id = localStorage.getItem(DEVICE_KEY);
-    if (!id) {
-      id =
-        typeof crypto !== "undefined" && crypto.randomUUID
-          ? crypto.randomUUID()
-          : `d-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      localStorage.setItem(DEVICE_KEY, id);
-    }
-    return id;
   }
 
   function loadLocal() {
@@ -93,64 +82,67 @@
     const cfg = window.METRO_RENTA_CONFIG || {};
     const url = (cfg.supabaseUrl || "").trim();
     const key = (cfg.supabaseAnonKey || "").trim();
-    if (!url || !key || !window.supabase?.createClient) return;
+    ownerKey = (cfg.ownerKey || "default").trim() || "default";
+    if (!url || !key || !window.supabase?.createClient) return false;
     supabaseClient = window.supabase.createClient(url, key);
+    return true;
   }
 
   async function pullRemote() {
-    if (!supabaseClient) return;
-    try {
-      const { data, error } = await supabaseClient
-        .from("metro_renta_state")
-        .select("rides, price, milestone_interval, updated_at")
-        .eq("device_id", deviceId())
-        .maybeSingle();
+    if (!supabaseClient) return false;
+    const { data, error } = await supabaseClient
+      .from("metro_renta_state")
+      .select("rides, price, milestone_interval, updated_at")
+      .eq("device_id", ownerKey)
+      .maybeSingle();
 
-      if (error) throw error;
-      if (!data) {
-        await pushRemote();
-        return;
-      }
+    if (error) throw error;
 
-      state.rides = Math.max(0, Math.floor(Number(data.rides) || 0));
-      state.price = Number(data.price) > 0 ? Number(data.price) : state.price;
-      state.milestoneInterval =
-        Number(data.milestone_interval) > 0
-          ? Number(data.milestone_interval)
-          : state.milestoneInterval;
-      saveLocal();
-      render();
-    } catch (err) {
-      console.warn("Supabase pull failed", err);
+    if (!data) {
+      // Seed cloud from local cache (first run).
+      await pushRemote();
+      return true;
     }
+
+    // Supabase is source of truth when a row exists.
+    state.rides = Math.max(0, Math.floor(Number(data.rides) || 0));
+    state.price = Number(data.price) > 0 ? Number(data.price) : DEFAULTS.price;
+    state.milestoneInterval =
+      Number(data.milestone_interval) > 0
+        ? Number(data.milestone_interval)
+        : DEFAULTS.milestoneInterval;
+    saveLocal();
+    return true;
   }
 
   async function pushRemote() {
-    if (!supabaseClient) return;
-    try {
-      const { error } = await supabaseClient.from("metro_renta_state").upsert(
-        {
-          device_id: deviceId(),
-          rides: state.rides,
-          price: state.price,
-          milestone_interval: state.milestoneInterval,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "device_id" }
-      );
-      if (error) throw error;
-    } catch (err) {
-      console.warn("Supabase push failed", err);
-    }
+    if (!supabaseClient) return false;
+    const { error } = await supabaseClient.from("metro_renta_state").upsert(
+      {
+        device_id: ownerKey,
+        rides: state.rides,
+        price: state.price,
+        milestone_interval: state.milestoneInterval,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "device_id" }
+    );
+    if (error) throw error;
+    return true;
   }
 
   function scheduleSync() {
     saveLocal();
-    if (!supabaseClient) return;
+    if (!supabaseClient || !cloudReady) return;
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(() => {
-      pushRemote();
-    }, 280);
+    syncTimer = setTimeout(async () => {
+      try {
+        await pushRemote();
+      } catch (err) {
+        console.warn("Supabase push failed", err);
+        showToast("Sync cloud impossible");
+      }
+    }, 220);
   }
 
   function totalAmount() {
@@ -169,7 +161,13 @@
     const progress = Math.min(100, (into / interval) * 100);
     const target = (level + 1) * interval;
     const reached = total > 0 && into === 0;
-    return { level, target, progress: reached ? 100 : progress, remaining: reached ? 0 : remaining, reached };
+    return {
+      level,
+      target,
+      progress: reached ? 100 : progress,
+      remaining: reached ? 0 : remaining,
+      reached,
+    };
   }
 
   function pulse(el, className) {
@@ -298,8 +296,22 @@
     else if (!els.settingsSheet.hidden) closeSettings();
   });
 
-  loadLocal();
-  initSupabase();
-  render();
-  pullRemote();
+  async function boot() {
+    loadLocal();
+    render();
+
+    const configured = initSupabase();
+    if (!configured) return;
+
+    try {
+      await pullRemote();
+      cloudReady = true;
+      render();
+    } catch (err) {
+      console.warn("Supabase pull failed", err);
+      showToast("Cloud indisponible · cache local");
+    }
+  }
+
+  boot();
 })();
