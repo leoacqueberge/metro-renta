@@ -1,6 +1,6 @@
 # Métro
 
-Compteur de trajets de métro — interface française, style clair iOS, prix éditable, paliers, sync Supabase optionnelle.
+Compteur de trajets de métro — interface française, style clair iOS, prix éditable, compteur d'amendes (70 €), sync Supabase optionnelle.
 
 **Live :** https://leoacqueberge.github.io/metro-renta/
 
@@ -13,7 +13,7 @@ npx --yes serve -l 5173
 ## Fonctionnalités
 
 - Prix du ticket configurable (défaut 2,05 €)
-- Paliers tous les N € (défaut 70 €)
+- Compteur d'amendes (1 amende = 70 € par défaut, configurable)
 - Persistance `localStorage` + sync Supabase si `config.js` est renseigné
 - Optimisé Safari iOS (safe areas, PWA meta)
 

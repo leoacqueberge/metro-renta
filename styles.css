@@ -81,24 +81,34 @@ button:disabled {
   margin-top: auto;
 }
 
-.brand {
-  text-align: center;
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: var(--tap-min);
+  margin: -0.35rem 0 0;
   animation: rise-in 560ms var(--ease) both;
 }
 
-.brand-name {
-  margin: 0;
-  font-size: clamp(2.4rem, 9vw, 3rem);
-  font-weight: 700;
-  letter-spacing: -0.045em;
-  line-height: 1;
+.btn-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--radius-md);
+  background: var(--fill);
+  color: var(--ink);
+  transition: background 140ms var(--ease), transform 140ms var(--ease);
 }
 
-.brand-tagline {
-  margin: 0.55rem 0 0;
-  color: var(--ink-secondary);
-  font-size: 1.02rem;
-  font-weight: 400;
+.btn-icon:not(:disabled):active {
+  background: var(--fill-strong);
+  transform: scale(0.96);
+}
+
+.btn-icon .icon {
+  display: block;
 }
 
 .meter {
@@ -146,6 +156,68 @@ button:disabled {
 
 .meter-value.is-undo {
   animation: fade-soft 360ms var(--ease);
+}
+
+.renta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--separator);
+}
+
+.renta .meter-value.is-positive {
+  color: #248a3d;
+}
+
+.renta .meter-value.is-negative {
+  color: var(--danger);
+}
+
+.amende {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.amende-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.amende-rate {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.amende-controls {
+  display: grid;
+  grid-template-columns: var(--tap-min) 1fr var(--tap-min);
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.amende-controls .meter-value {
+  text-align: center;
+}
+
+.btn-step {
+  width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--radius-md);
+  background: var(--fill);
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.btn-step:not(:disabled):active {
+  background: var(--fill-strong);
 }
 
 .palier {
@@ -201,6 +273,26 @@ button:disabled {
   animation-delay: 80ms;
 }
 
+.action-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.action-bar .btn-add {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.btn-icon--undo {
+  flex: 0 0 4.5rem;
+  align-self: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  min-height: 4.5rem;
+  border-radius: var(--radius-lg);
+}
+
 .btn-add {
   display: flex;
   align-items: center;
@@ -248,12 +340,6 @@ button:disabled {
   font-size: 0.88rem;
   opacity: 0.85;
   font-variant-numeric: tabular-nums;
-}
-
-.secondary-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.65rem;
 }
 
 .btn-secondary,

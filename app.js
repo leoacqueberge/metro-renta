@@ -1,14 +1,20 @@
 (() => {
-  const STORAGE_KEY = "metro-renta:v2";
+  const STORAGE_KEY = "metro-renta:v3";
   const DEFAULTS = {
     rides: 0,
+    fines: 0,
     price: 2.05,
-    milestoneInterval: 70,
+    fineAmount: 70,
   };
 
   const els = {
     count: document.getElementById("ride-count"),
     total: document.getElementById("ride-total"),
+    renta: document.getElementById("renta-value"),
+    amendes: document.getElementById("amende-count"),
+    amendeRate: document.getElementById("amende-rate"),
+    fineMinus: document.getElementById("btn-fine-minus"),
+    finePlus: document.getElementById("btn-fine-plus"),
     add: document.getElementById("btn-add"),
     addPrice: document.getElementById("btn-add-price"),
     undo: document.getElementById("btn-undo"),
@@ -48,9 +54,20 @@
     return euro.format(amount).replace(/\u202f/g, "\u00a0");
   }
 
+  function migrateLegacyLocal(data) {
+    if (typeof data?.fines === "number" && data.fines >= 0) {
+      state.fines = Math.floor(data.fines);
+    }
+    if (typeof data?.fineAmount === "number" && data.fineAmount > 0) {
+      state.fineAmount = data.fineAmount;
+    } else if (typeof data?.milestoneInterval === "number" && data.milestoneInterval > 0) {
+      state.fineAmount = data.milestoneInterval;
+    }
+  }
+
   function loadLocal() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("metro-renta:v2");
       if (!raw) return;
       const data = JSON.parse(raw);
       if (typeof data?.rides === "number" && data.rides >= 0) {
@@ -59,9 +76,7 @@
       if (typeof data?.price === "number" && data.price > 0) {
         state.price = data.price;
       }
-      if (typeof data?.milestoneInterval === "number" && data.milestoneInterval > 0) {
-        state.milestoneInterval = data.milestoneInterval;
-      }
+      migrateLegacyLocal(data);
     } catch {
       /* ignore */
     }
@@ -72,8 +87,9 @@
       STORAGE_KEY,
       JSON.stringify({
         rides: state.rides,
+        fines: state.fines,
         price: state.price,
-        milestoneInterval: state.milestoneInterval,
+        fineAmount: state.fineAmount,
       })
     );
   }
@@ -92,25 +108,24 @@
     if (!supabaseClient) return false;
     const { data, error } = await supabaseClient
       .from("metro_renta_state")
-      .select("rides, price, milestone_interval, updated_at")
+      .select("rides, fines, price, milestone_interval, updated_at")
       .eq("device_id", ownerKey)
       .maybeSingle();
 
     if (error) throw error;
 
     if (!data) {
-      // Seed cloud from local cache (first run).
       await pushRemote();
       return true;
     }
 
-    // Supabase is source of truth when a row exists.
     state.rides = Math.max(0, Math.floor(Number(data.rides) || 0));
+    state.fines = Math.max(0, Math.floor(Number(data.fines) || 0));
     state.price = Number(data.price) > 0 ? Number(data.price) : DEFAULTS.price;
-    state.milestoneInterval =
+    state.fineAmount =
       Number(data.milestone_interval) > 0
         ? Number(data.milestone_interval)
-        : DEFAULTS.milestoneInterval;
+        : DEFAULTS.fineAmount;
     saveLocal();
     return true;
   }
@@ -121,8 +136,9 @@
       {
         device_id: ownerKey,
         rides: state.rides,
+        fines: state.fines,
         price: state.price,
-        milestone_interval: state.milestoneInterval,
+        milestone_interval: state.fineAmount,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "device_id" }
@@ -149,21 +165,27 @@
     return state.rides * state.price;
   }
 
-  function milestoneInfo() {
-    const interval = state.milestoneInterval;
+  function finesCost() {
+    return state.fines * state.fineAmount;
+  }
+
+  function rentability() {
+    return totalAmount() - finesCost();
+  }
+
+  function thresholdInfo() {
+    const interval = state.fineAmount;
     const total = totalAmount();
     if (!(interval > 0)) {
-      return { level: 0, target: 0, progress: 0, remaining: 0, reached: false };
+      return { level: 0, progress: 0, remaining: 0, reached: false };
     }
     const level = Math.floor(total / interval);
     const into = total - level * interval;
     const remaining = Math.max(0, interval - into);
     const progress = Math.min(100, (into / interval) * 100);
-    const target = (level + 1) * interval;
     const reached = total > 0 && into === 0;
     return {
       level,
-      target,
       progress: reached ? 100 : progress,
       remaining: reached ? 0 : remaining,
       reached,
@@ -187,34 +209,55 @@
 
   function render({ animate } = {}) {
     const total = totalAmount();
-    const m = milestoneInfo();
+    const net = rentability();
+    const m = thresholdInfo();
+    const covered = Math.floor(total / state.fineAmount);
 
     els.count.textContent = String(state.rides);
     els.total.textContent = formatEuro(total);
+    els.renta.textContent = formatEuro(net);
+    els.renta.classList.toggle("is-positive", net > 0);
+    els.renta.classList.toggle("is-negative", net < 0);
+    els.amendes.textContent = String(state.fines);
+    els.amendeRate.textContent = `${formatEuro(state.fineAmount)} l'amende`;
     els.addPrice.textContent = formatEuro(state.price);
 
-    els.palierTarget.textContent = formatEuro(m.target || state.milestoneInterval);
+    els.palierTarget.textContent = formatEuro(state.fineAmount);
     els.palierFill.style.width = `${m.progress}%`;
     els.palierBar.setAttribute("aria-valuenow", String(Math.round(m.progress)));
     els.palier.classList.toggle("is-reached", m.reached);
 
     if (m.reached && state.rides > 0) {
-      els.palierMeta.textContent = `Palier ${m.level} atteint · prochain ${formatEuro(m.target)}`;
+      const label = covered > 1 ? "amendes" : "amende";
+      els.palierMeta.textContent = `Seuil atteint · ${covered} ${label} absorbable${covered > 1 ? "s" : ""}`;
     } else {
-      els.palierMeta.textContent = `${formatEuro(m.remaining)} restants · palier ${m.level}`;
+      els.palierMeta.textContent = `${formatEuro(m.remaining)} avant le prochain seuil`;
     }
 
     const hasRides = state.rides > 0;
+    const hasFines = state.fines > 0;
     els.undo.disabled = !hasRides;
-    els.reset.disabled = !hasRides;
+    els.fineMinus.disabled = !hasFines;
+    els.reset.disabled = !hasRides && !hasFines;
 
     if (animate === "add") {
       pulse(els.count, "is-bump");
       pulse(els.total, "is-bump");
-      if (m.reached) showToast(`Palier ${m.level} · ${formatEuro(total)}`);
+      pulse(els.renta, "is-bump");
+      if (m.reached) {
+        showToast(`Seuil · ${formatEuro(total)} économisés`);
+      }
     } else if (animate === "undo") {
       pulse(els.count, "is-undo");
       pulse(els.total, "is-undo");
+      pulse(els.renta, "is-undo");
+    } else if (animate === "fine-add") {
+      pulse(els.amendes, "is-bump");
+      pulse(els.renta, "is-bump");
+      showToast(`Amende ajoutée · ${formatEuro(net)}`);
+    } else if (animate === "fine-undo") {
+      pulse(els.amendes, "is-undo");
+      pulse(els.renta, "is-undo");
     }
   }
 
@@ -231,9 +274,22 @@
     render({ animate: "undo" });
   }
 
+  function addFine() {
+    state.fines += 1;
+    scheduleSync();
+    render({ animate: "fine-add" });
+  }
+
+  function undoFine() {
+    if (state.fines <= 0) return;
+    state.fines -= 1;
+    scheduleSync();
+    render({ animate: "fine-undo" });
+  }
+
   function openSettings() {
     els.inputPrice.value = String(state.price);
-    els.inputMilestone.value = String(state.milestoneInterval);
+    els.inputMilestone.value = String(state.fineAmount);
     els.settingsSheet.hidden = false;
   }
 
@@ -243,13 +299,13 @@
 
   function saveSettings() {
     const price = Number(String(els.inputPrice.value).replace(",", "."));
-    const milestone = Number(String(els.inputMilestone.value).replace(",", "."));
-    if (!(price > 0) || !(milestone > 0)) {
+    const fineAmount = Number(String(els.inputMilestone.value).replace(",", "."));
+    if (!(price > 0) || !(fineAmount > 0)) {
       showToast("Valeurs invalides");
       return;
     }
     state.price = Math.round(price * 100) / 100;
-    state.milestoneInterval = Math.round(milestone * 100) / 100;
+    state.fineAmount = Math.round(fineAmount * 100) / 100;
     scheduleSync();
     closeSettings();
     render();
@@ -257,7 +313,7 @@
   }
 
   function openReset() {
-    if (state.rides <= 0) return;
+    if (state.rides <= 0 && state.fines <= 0) return;
     els.resetDialog.hidden = false;
   }
 
@@ -267,6 +323,7 @@
 
   function confirmReset() {
     state.rides = 0;
+    state.fines = 0;
     scheduleSync();
     closeReset();
     closeSettings();
@@ -276,6 +333,8 @@
 
   els.add.addEventListener("click", addRide);
   els.undo.addEventListener("click", undoRide);
+  els.finePlus.addEventListener("click", addFine);
+  els.fineMinus.addEventListener("click", undoFine);
   els.settings.addEventListener("click", openSettings);
   els.settingsClose.addEventListener("click", closeSettings);
   els.settingsSave.addEventListener("click", saveSettings);
