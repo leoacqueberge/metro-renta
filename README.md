@@ -1,25 +1,27 @@
 # Métro renta
 
-Compteur de trajets de métro (2,05 € / trajet) — interface française, optimisée Safari iOS.
+Compteur de trajets de métro — interface française, style clair iOS, prix éditable, paliers, sync Supabase optionnelle.
+
+**Live :** https://leoacqueberge.github.io/metro-renta/
 
 ## Lancer en local
-
-Depuis ce dossier :
 
 ```bash
 npx --yes serve -l 5173
 ```
 
-Puis ouvrir [http://localhost:5173](http://localhost:5173).
+## Fonctionnalités
 
-Alternative sans npx :
+- Prix du ticket configurable (défaut 2,05 €)
+- Paliers tous les N € (défaut 70 €)
+- Persistance `localStorage` + sync Supabase si `config.js` est renseigné
+- Optimisé Safari iOS (safe areas, PWA meta)
 
-```bash
-python3 -m http.server 5173
-```
+## Supabase
 
-## iPhone Safari
+1. Créer / restaurer un projet (limite free : pausez un autre projet si besoin).
+2. Exécuter [`supabase/schema.sql`](./supabase/schema.sql) dans le SQL Editor.
+3. Copier `config.example.js` → `config.js` et coller URL + clé anon.
+4. Redéployer / pousser sur `main` pour GitHub Pages.
 
-1. Ouvrir l’URL (local via le même Wi‑Fi, ou hébergement).
-2. Partager → **Sur l’écran d’accueil** pour un usage type app.
-3. Les trajets sont mémorisés dans `localStorage` (survivent aux rechargements).
+Sans clés, l’app reste 100 % utilisable en local sur l’appareil.

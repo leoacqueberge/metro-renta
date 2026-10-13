@@ -7,89 +7,164 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Métro renta" />
-    <meta name="theme-color" content="#07101c" />
+    <meta name="theme-color" content="#f5f5f7" />
     <meta
       name="description"
-      content="Comptez vos trajets de métro et le coût total — 2,05 € par trajet."
+      content="Comptez vos trajets de métro et le coût total."
     />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="apple-touch-icon" href="./icon-180.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
     <title>Métro renta</title>
   </head>
   <body>
-    <div class="atmosphere" aria-hidden="true">
-      <div class="glow glow-a"></div>
-      <div class="glow glow-b"></div>
-      <div class="rails"></div>
-      <div class="tile-grid"></div>
-    </div>
-
     <main class="app">
       <header class="brand">
-        <p class="brand-mark" aria-hidden="true">M</p>
         <h1 class="brand-name">Métro renta</h1>
         <p class="brand-tagline">Chaque trajet, compté.</p>
       </header>
 
       <section class="meter" aria-live="polite">
-        <div class="meter-block">
-          <p class="meter-label">Trajets</p>
-          <p class="meter-value" id="ride-count">0</p>
+        <div class="meter-row">
+          <div class="meter-block">
+            <p class="meter-label">Trajets</p>
+            <p class="meter-value" id="ride-count">0</p>
+          </div>
+          <div class="meter-block">
+            <p class="meter-label">Total</p>
+            <p class="meter-value meter-value--money" id="ride-total">0,00&nbsp;€</p>
+          </div>
         </div>
-        <div class="meter-divider" aria-hidden="true"></div>
-        <div class="meter-block">
-          <p class="meter-label">Total</p>
-          <p class="meter-value meter-value--money" id="ride-total">0,00&nbsp;€</p>
+
+        <div class="palier" id="palier">
+          <div class="palier-top">
+            <p class="palier-label">Prochain palier</p>
+            <p class="palier-target" id="palier-target">70,00&nbsp;€</p>
+          </div>
+          <div
+            class="palier-track"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+            id="palier-bar"
+          >
+            <div class="palier-fill" id="palier-fill"></div>
+          </div>
+          <p class="palier-meta" id="palier-meta">0,00&nbsp;€ restants · palier 0</p>
         </div>
       </section>
 
       <section class="actions">
         <button type="button" class="btn-add" id="btn-add" aria-label="Ajouter un trajet">
           <span class="btn-add-plus" aria-hidden="true">+</span>
-          <span class="btn-add-label">Ajouter un trajet</span>
-          <span class="btn-add-price">2,05&nbsp;€</span>
+          <span class="btn-add-copy">
+            <span class="btn-add-label">Ajouter un trajet</span>
+            <span class="btn-add-price" id="btn-add-price">2,05&nbsp;€</span>
+          </span>
         </button>
 
         <div class="secondary-row">
-          <button type="button" class="btn-ghost" id="btn-undo" disabled>
-            Annuler le dernier
+          <button type="button" class="btn-secondary" id="btn-undo" disabled>
+            Annuler
           </button>
-          <button type="button" class="btn-ghost btn-ghost--danger" id="btn-reset" disabled>
-            Réinitialiser
+          <button type="button" class="btn-secondary" id="btn-settings">
+            Réglages
           </button>
         </div>
       </section>
 
-      <p class="hint" id="hint">Appuyez pour enregistrer un trajet.</p>
+      <p class="sync" id="sync-status" aria-live="polite"></p>
     </main>
 
     <div
-      class="dialog-backdrop"
+      class="sheet-backdrop"
+      id="settings-sheet"
+      hidden
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settings-title"
+    >
+      <div class="sheet">
+        <div class="sheet-handle" aria-hidden="true"></div>
+        <h2 id="settings-title">Réglages</h2>
+
+        <label class="field">
+          <span class="field-label">Prix du ticket</span>
+          <div class="field-input-wrap">
+            <input
+              id="input-price"
+              type="number"
+              inputmode="decimal"
+              min="0.01"
+              step="0.01"
+              value="2.05"
+            />
+            <span class="field-suffix">€</span>
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Palier tous les</span>
+          <div class="field-input-wrap">
+            <input
+              id="input-milestone"
+              type="number"
+              inputmode="decimal"
+              min="1"
+              step="1"
+              value="70"
+            />
+            <span class="field-suffix">€</span>
+          </div>
+        </label>
+
+        <div class="sheet-actions">
+          <button type="button" class="btn-secondary" id="btn-settings-close">
+            Fermer
+          </button>
+          <button type="button" class="btn-primary" id="btn-settings-save">
+            Enregistrer
+          </button>
+        </div>
+
+        <button type="button" class="btn-text-danger" id="btn-reset" disabled>
+          Réinitialiser le compteur
+        </button>
+      </div>
+    </div>
+
+    <div
+      class="sheet-backdrop"
       id="reset-dialog"
       hidden
       role="dialog"
       aria-modal="true"
       aria-labelledby="reset-title"
     >
-      <div class="dialog">
+      <div class="sheet sheet--compact">
         <h2 id="reset-title">Tout effacer&nbsp;?</h2>
-        <p>Le compteur et le total seront remis à zéro.</p>
-        <div class="dialog-actions">
-          <button type="button" class="btn-ghost" id="btn-reset-cancel">Annuler</button>
-          <button type="button" class="btn-confirm" id="btn-reset-confirm">Effacer</button>
+        <p class="sheet-copy">Le compteur et le total seront remis à zéro. Les réglages sont conservés.</p>
+        <div class="sheet-actions">
+          <button type="button" class="btn-secondary" id="btn-reset-cancel">Annuler</button>
+          <button type="button" class="btn-danger" id="btn-reset-confirm">Effacer</button>
         </div>
       </div>
     </div>
 
+    <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+    <script src="./config.js"></script>
     <script src="./app.js" defer></script>
   </body>
 </html>

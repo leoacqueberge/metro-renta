@@ -4,8 +4,8 @@
   "description": "Comptez vos trajets de métro et le coût total.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#07101c",
-  "theme_color": "#07101c",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
   "lang": "fr",
   "icons": [
     {
