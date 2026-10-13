@@ -14,7 +14,6 @@
     addPrice: document.getElementById("btn-add-price"),
     undo: document.getElementById("btn-undo"),
     settings: document.getElementById("btn-settings"),
-    sync: document.getElementById("sync-status"),
     palier: document.getElementById("palier"),
     palierTarget: document.getElementById("palier-target"),
     palierFill: document.getElementById("palier-fill"),
@@ -94,12 +93,8 @@
     const cfg = window.METRO_RENTA_CONFIG || {};
     const url = (cfg.supabaseUrl || "").trim();
     const key = (cfg.supabaseAnonKey || "").trim();
-    if (!url || !key || !window.supabase?.createClient) {
-      els.sync.textContent = "Enregistrement local";
-      return;
-    }
+    if (!url || !key || !window.supabase?.createClient) return;
     supabaseClient = window.supabase.createClient(url, key);
-    els.sync.textContent = "Synchronisation…";
   }
 
   async function pullRemote() {
@@ -114,7 +109,6 @@
       if (error) throw error;
       if (!data) {
         await pushRemote();
-        els.sync.textContent = "Synchronisé";
         return;
       }
 
@@ -126,10 +120,8 @@
           : state.milestoneInterval;
       saveLocal();
       render();
-      els.sync.textContent = "Synchronisé";
     } catch (err) {
       console.warn("Supabase pull failed", err);
-      els.sync.textContent = "Hors ligne · local";
     }
   }
 
@@ -147,10 +139,8 @@
         { onConflict: "device_id" }
       );
       if (error) throw error;
-      els.sync.textContent = "Synchronisé";
     } catch (err) {
       console.warn("Supabase push failed", err);
-      els.sync.textContent = "Hors ligne · local";
     }
   }
 
@@ -158,7 +148,6 @@
     saveLocal();
     if (!supabaseClient) return;
     clearTimeout(syncTimer);
-    els.sync.textContent = "Synchronisation…";
     syncTimer = setTimeout(() => {
       pushRemote();
     }, 280);

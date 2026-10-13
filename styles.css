@@ -69,13 +69,16 @@ button:disabled {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 1.75rem;
+  gap: 1.5rem;
   padding:
     calc(2rem + var(--safe-top))
     calc(1.35rem + var(--safe-right))
-    calc(1.5rem + var(--safe-bottom))
+    calc(1.25rem + var(--safe-bottom))
     calc(1.35rem + var(--safe-left));
+}
+
+.app > .actions {
+  margin-top: auto;
 }
 
 .brand {
@@ -295,14 +298,6 @@ button:disabled {
   font-size: 0.95rem;
 }
 
-.sync {
-  margin: 0;
-  min-height: 1.2rem;
-  text-align: center;
-  color: var(--ink-tertiary);
-  font-size: 0.8rem;
-}
-
 .sheet-backdrop {
   position: fixed;
   inset: 0;
@@ -493,7 +488,6 @@ button:disabled {
 
 @media (min-width: 480px) {
   .app {
-    justify-content: center;
     gap: 2rem;
     padding-block: 2.75rem;
   }
