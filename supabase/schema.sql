@@ -5,7 +5,7 @@ create table if not exists public.metro_renta_state (
   device_id text primary key,
   rides integer not null default 0 check (rides >= 0),
   fines integer not null default 0 check (fines >= 0),
-  price numeric(10, 2) not null default 2.05 check (price > 0),
+  price numeric(10, 2) not null default 2.55 check (price > 0),
   milestone_interval numeric(10, 2) not null default 70 check (milestone_interval > 0),
   updated_at timestamptz not null default now()
 );

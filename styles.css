@@ -1,25 +1,28 @@
 :root {
-  --bg: #f5f5f7;
+  --ratp-blue: #000091;
+  --ratp-blue-deep: #00007a;
+  --bg: #f4f5f8;
   --bg-elevated: #ffffff;
-  --ink: #1d1d1f;
-  --ink-secondary: #6e6e73;
-  --ink-tertiary: #86868b;
-  --separator: rgba(60, 60, 67, 0.12);
-  --accent: #0071e3;
-  --accent-pressed: #0077ed;
-  --danger: #ff3b30;
-  --fill: rgba(120, 120, 128, 0.12);
-  --fill-strong: rgba(120, 120, 128, 0.18);
-  --shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  --ink: #161616;
+  --ink-secondary: #3a3a3a;
+  --ink-tertiary: #6a6a6a;
+  --separator: rgba(22, 22, 22, 0.1);
+  --accent: var(--ratp-blue);
+  --accent-pressed: var(--ratp-blue-deep);
+  --danger: #ce0500;
+  --success: #18753c;
+  --fill: #ececf0;
+  --fill-strong: #e0e0e6;
+  --shadow: 0 8px 28px rgba(0, 0, 80, 0.08);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
-  --font: "IBM Plex Sans", "Avenir Next", "Segoe UI", sans-serif;
+  --font: "Source Sans 3", "Avenir Next", "Segoe UI", sans-serif;
   --tap-min: 48px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-  --radius-lg: 1.25rem;
-  --radius-md: 0.9rem;
+  --radius-lg: 1.15rem;
+  --radius-md: 0.85rem;
 }
 
 *,
@@ -38,9 +41,7 @@ body {
 body {
   font-family: var(--font);
   color: var(--ink);
-  background:
-    radial-gradient(120% 80% at 50% -20%, #ffffff 0%, transparent 55%),
-    linear-gradient(180deg, #fbfbfd 0%, var(--bg) 45%, #eef0f4 100%);
+  background: var(--bg);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
 }
@@ -98,8 +99,18 @@ button:disabled {
   height: var(--tap-min);
   border-radius: var(--radius-md);
   background: var(--fill);
-  color: var(--ink);
+  color: var(--ratp-blue);
   transition: background 140ms var(--ease), transform 140ms var(--ease);
+}
+
+.btn-icon--profile {
+  border-radius: 50%;
+  background: var(--ratp-blue);
+  color: #fff;
+}
+
+.btn-icon--profile:not(:disabled):active {
+  background: var(--ratp-blue-deep);
 }
 
 .btn-icon:not(:disabled):active {
@@ -131,7 +142,7 @@ button:disabled {
   margin: 0 0 0.35rem;
   color: var(--ink-tertiary);
   font-size: 0.78rem;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -143,6 +154,7 @@ button:disabled {
   letter-spacing: -0.05em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+  color: var(--ratp-blue);
 }
 
 .meter-value--money {
@@ -167,7 +179,7 @@ button:disabled {
 }
 
 .renta .meter-value.is-positive {
-  color: #248a3d;
+  color: var(--success);
 }
 
 .renta .meter-value.is-negative {
@@ -211,6 +223,7 @@ button:disabled {
   height: var(--tap-min);
   border-radius: var(--radius-md);
   background: var(--fill);
+  color: var(--ratp-blue);
   font-size: 1.45rem;
   font-weight: 600;
   line-height: 1;
@@ -242,7 +255,8 @@ button:disabled {
 
 .palier-target {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--ratp-blue);
   font-variant-numeric: tabular-nums;
 }
 
@@ -257,12 +271,12 @@ button:disabled {
   height: 100%;
   width: 0%;
   border-radius: inherit;
-  background: var(--accent);
+  background: var(--ratp-blue);
   transition: width 380ms var(--ease);
 }
 
 .palier.is-reached .palier-fill {
-  background: #34c759;
+  background: var(--success);
 }
 
 .actions {
@@ -286,11 +300,12 @@ button:disabled {
 
 .btn-icon--undo {
   flex: 0 0 4.5rem;
-  align-self: center;
+  align-self: stretch;
   width: 4.5rem;
-  height: 4.5rem;
   min-height: 4.5rem;
+  height: auto;
   border-radius: var(--radius-lg);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.1);
 }
 
 .btn-add {
@@ -300,15 +315,15 @@ button:disabled {
   min-height: 4.5rem;
   padding: 1rem 1.15rem;
   border-radius: var(--radius-lg);
-  background: var(--accent);
+  background: var(--ratp-blue);
   color: #fff;
-  box-shadow: 0 10px 24px rgba(0, 113, 227, 0.22);
+  box-shadow: 0 10px 24px rgba(0, 0, 145, 0.22);
   transition: transform 140ms var(--ease), background 140ms var(--ease);
 }
 
 .btn-add:active {
   transform: scale(0.98);
-  background: var(--accent-pressed);
+  background: var(--ratp-blue-deep);
 }
 
 .btn-add-plus {
@@ -336,10 +351,33 @@ button:disabled {
   letter-spacing: -0.02em;
 }
 
+.btn-add-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+}
+
 .btn-add-price {
   font-size: 0.88rem;
   opacity: 0.85;
   font-variant-numeric: tabular-nums;
+}
+
+.btn-add-pass {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.btn-add-pass[hidden] {
+  display: none;
 }
 
 .btn-secondary,
@@ -348,7 +386,7 @@ button:disabled {
   min-height: var(--tap-min);
   padding: 0.8rem 1rem;
   border-radius: var(--radius-md);
-  font-weight: 550;
+  font-weight: 600;
   font-size: 0.95rem;
 }
 
@@ -362,12 +400,12 @@ button:disabled {
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: var(--ratp-blue);
   color: #fff;
 }
 
 .btn-primary:active {
-  background: var(--accent-pressed);
+  background: var(--ratp-blue-deep);
 }
 
 .btn-danger {
@@ -380,7 +418,7 @@ button:disabled {
   min-height: var(--tap-min);
   width: 100%;
   color: var(--danger);
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.95rem;
 }
 
@@ -395,7 +433,7 @@ button:disabled {
     calc(0.75rem + var(--safe-right))
     calc(0.75rem + var(--safe-bottom))
     calc(0.75rem + var(--safe-left));
-  background: rgba(0, 0, 0, 0.28);
+  background: rgba(0, 0, 60, 0.35);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   animation: fade-in 180ms ease-out;
@@ -423,13 +461,14 @@ button:disabled {
   height: 0.3rem;
   margin: 0.2rem auto 0.9rem;
   border-radius: 999px;
-  background: rgba(60, 60, 67, 0.18);
+  background: rgba(22, 22, 22, 0.16);
 }
 
 .sheet h2 {
   margin: 0 0 1rem;
   font-size: 1.35rem;
   letter-spacing: -0.03em;
+  color: var(--ratp-blue);
 }
 
 .sheet-copy {
@@ -449,7 +488,89 @@ button:disabled {
 .field-label {
   color: var(--ink-secondary);
   font-size: 0.88rem;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.field-price {
+  margin: 0 0 0.75rem;
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--ratp-blue);
+  font-variant-numeric: tabular-nums;
+}
+
+.toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: var(--tap-min);
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: var(--fill);
+  cursor: pointer;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle-ui {
+  position: relative;
+  flex: 0 0 auto;
+  width: 2.7rem;
+  height: 1.55rem;
+  border-radius: 999px;
+  background: #c5c5cc;
+  transition: background 160ms var(--ease);
+}
+
+.toggle-ui::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 160ms var(--ease);
+}
+
+.toggle input:checked + .toggle-ui {
+  background: var(--ratp-blue);
+}
+
+.toggle input:checked + .toggle-ui::after {
+  transform: translateX(1.15rem);
+}
+
+.toggle input:focus-visible + .toggle-ui {
+  outline: 2px solid var(--ratp-blue);
+  outline-offset: 2px;
+}
+
+.toggle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.toggle-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.toggle-hint {
+  font-size: 0.82rem;
+  color: var(--ink-tertiary);
+  line-height: 1.3;
 }
 
 .field-input-wrap {
@@ -475,7 +596,7 @@ button:disabled {
 
 .field-suffix {
   color: var(--ink-tertiary);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .sheet-actions {
@@ -494,10 +615,10 @@ button:disabled {
   max-width: calc(100% - 2rem);
   padding: 0.75rem 1.05rem;
   border-radius: 999px;
-  background: rgba(29, 29, 31, 0.92);
+  background: rgba(0, 0, 80, 0.92);
   color: #fff;
   font-size: 0.92rem;
-  font-weight: 500;
+  font-weight: 600;
   box-shadow: var(--shadow);
   animation: toast-in 280ms var(--ease);
 }

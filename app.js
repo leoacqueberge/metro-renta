@@ -1,9 +1,12 @@
 (() => {
   const STORAGE_KEY = "metro-renta:v3";
+  const PRICE_STANDARD = 2.55;
+  const PRICE_LIBERTE = 2.05;
   const DEFAULTS = {
     rides: 0,
     fines: 0,
-    price: 2.05,
+    passLiberte: false,
+    price: PRICE_STANDARD,
     fineAmount: 70,
   };
 
@@ -17,6 +20,7 @@
     finePlus: document.getElementById("btn-fine-plus"),
     add: document.getElementById("btn-add"),
     addPrice: document.getElementById("btn-add-price"),
+    addPass: document.getElementById("btn-add-pass"),
     undo: document.getElementById("btn-undo"),
     settings: document.getElementById("btn-settings"),
     palier: document.getElementById("palier"),
@@ -25,7 +29,8 @@
     palierBar: document.getElementById("palier-bar"),
     palierMeta: document.getElementById("palier-meta"),
     settingsSheet: document.getElementById("settings-sheet"),
-    inputPrice: document.getElementById("input-price"),
+    settingsPrice: document.getElementById("settings-price"),
+    inputPassLiberte: document.getElementById("input-pass-liberte"),
     inputMilestone: document.getElementById("input-milestone"),
     settingsClose: document.getElementById("btn-settings-close"),
     settingsSave: document.getElementById("btn-settings-save"),
@@ -54,6 +59,15 @@
     return euro.format(amount).replace(/\u202f/g, "\u00a0");
   }
 
+  function priceFromPass(passLiberte) {
+    return passLiberte ? PRICE_LIBERTE : PRICE_STANDARD;
+  }
+
+  function applyPassLiberte(passLiberte) {
+    state.passLiberte = Boolean(passLiberte);
+    state.price = priceFromPass(state.passLiberte);
+  }
+
   function migrateLegacyLocal(data) {
     if (typeof data?.fines === "number" && data.fines >= 0) {
       state.fines = Math.floor(data.fines);
@@ -73,10 +87,13 @@
       if (typeof data?.rides === "number" && data.rides >= 0) {
         state.rides = Math.floor(data.rides);
       }
-      if (typeof data?.price === "number" && data.price > 0) {
-        state.price = data.price;
-      }
       migrateLegacyLocal(data);
+
+      if (typeof data?.passLiberte === "boolean") {
+        applyPassLiberte(data.passLiberte);
+      } else if (typeof data?.price === "number" && data.price > 0) {
+        applyPassLiberte(Math.abs(data.price - PRICE_LIBERTE) < 0.001);
+      }
     } catch {
       /* ignore */
     }
@@ -88,6 +105,7 @@
       JSON.stringify({
         rides: state.rides,
         fines: state.fines,
+        passLiberte: state.passLiberte,
         price: state.price,
         fineAmount: state.fineAmount,
       })
@@ -121,7 +139,8 @@
 
     state.rides = Math.max(0, Math.floor(Number(data.rides) || 0));
     state.fines = Math.max(0, Math.floor(Number(data.fines) || 0));
-    state.price = Number(data.price) > 0 ? Number(data.price) : DEFAULTS.price;
+    const remotePrice = Number(data.price);
+    applyPassLiberte(remotePrice > 0 && Math.abs(remotePrice - PRICE_LIBERTE) < 0.001);
     state.fineAmount =
       Number(data.milestone_interval) > 0
         ? Number(data.milestone_interval)
@@ -207,6 +226,11 @@
     }, 2200);
   }
 
+  function syncSettingsPricePreview() {
+    const pass = els.inputPassLiberte.checked;
+    els.settingsPrice.textContent = formatEuro(priceFromPass(pass));
+  }
+
   function render({ animate } = {}) {
     const total = totalAmount();
     const net = rentability();
@@ -221,6 +245,7 @@
     els.amendes.textContent = String(state.fines);
     els.amendeRate.textContent = `${formatEuro(state.fineAmount)} l'amende`;
     els.addPrice.textContent = formatEuro(state.price);
+    els.addPass.hidden = !state.passLiberte;
 
     els.palierTarget.textContent = formatEuro(state.fineAmount);
     els.palierFill.style.width = `${m.progress}%`;
@@ -288,8 +313,9 @@
   }
 
   function openSettings() {
-    els.inputPrice.value = String(state.price);
+    els.inputPassLiberte.checked = state.passLiberte;
     els.inputMilestone.value = String(state.fineAmount);
+    syncSettingsPricePreview();
     els.settingsSheet.hidden = false;
   }
 
@@ -298,13 +324,12 @@
   }
 
   function saveSettings() {
-    const price = Number(String(els.inputPrice.value).replace(",", "."));
     const fineAmount = Number(String(els.inputMilestone.value).replace(",", "."));
-    if (!(price > 0) || !(fineAmount > 0)) {
+    if (!(fineAmount > 0)) {
       showToast("Valeurs invalides");
       return;
     }
-    state.price = Math.round(price * 100) / 100;
+    applyPassLiberte(els.inputPassLiberte.checked);
     state.fineAmount = Math.round(fineAmount * 100) / 100;
     scheduleSync();
     closeSettings();
@@ -341,6 +366,7 @@
   els.reset.addEventListener("click", openReset);
   els.resetCancel.addEventListener("click", closeReset);
   els.resetConfirm.addEventListener("click", confirmReset);
+  els.inputPassLiberte.addEventListener("change", syncSettingsPricePreview);
 
   els.settingsSheet.addEventListener("click", (event) => {
     if (event.target === els.settingsSheet) closeSettings();
