@@ -1,6 +1,6 @@
 {
-  "name": "Métro renta",
-  "short_name": "Métro renta",
+  "name": "Métro",
+  "short_name": "Métro",
   "description": "Comptez vos trajets de métro et le coût total.",
   "start_url": "./index.html",
   "display": "standalone",

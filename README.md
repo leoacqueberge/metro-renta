@@ -1,4 +1,4 @@
-# Métro renta
+# Métro
 
 Compteur de trajets de métro — interface française, style clair iOS, prix éditable, paliers, sync Supabase optionnelle.
 
